@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-import useAxios from 'axios-hooks';
+import useAxios from "axios-hooks";
 
-import { Track } from '../types/Track/Track';
-import { formatDate } from '../utils/formatDate';
+import { Track } from "../types/Track/Track";
+import { formatDate } from "../utils/formatDate";
 
 export type RecentlyPlayedQueries = {
   before?: number;
@@ -15,16 +15,20 @@ type ParsedTracks = {
   [key: string]: Track[];
 };
 
-export const useGetRecentlyPlayed = (timeDirection: 'before' | 'after') => {
+export const useGetRecentlyPlayed = (timeDirection: "before" | "after") => {
   const [tracks, setTracks] = useState<ParsedTracks | null>(null);
   const [{ data, loading, error }, get] = useAxios(
     {
       url: `${process.env.SPOTIFY_BASE_URL}/me/player/recently-played`,
     },
-    { manual: true },
+    { manual: true }
   );
 
   const parseRecentlyPlayed = useCallback((data: any) => {
+    if (!data) {
+      return {};
+    }
+
     const parsed: ParsedTracks = { ...tracks };
 
     for (const played of data) {
@@ -40,7 +44,8 @@ export const useGetRecentlyPlayed = (timeDirection: 'before' | 'after') => {
         name: played.track.name,
         isPlayable: played.track.is_playable,
         artist: played.track.album.artists[0].name,
-        image: played.track.album.images[played.track.album.images.length - 1].url,
+        image:
+          played.track.album.images[played.track.album.images.length - 1].url,
       });
     }
 
@@ -53,12 +58,14 @@ export const useGetRecentlyPlayed = (timeDirection: 'before' | 'after') => {
 
   useEffect(() => {
     if (error) {
-      console.log(error);
+      console.log(error.response.status);
       return;
     }
 
     if (data && !loading) {
-      setTracks(parseRecentlyPlayed(data.items));
+      if (data.items) {
+        setTracks(parseRecentlyPlayed(data.items));
+      }
     }
   }, [data, loading, error, parseRecentlyPlayed]);
 
