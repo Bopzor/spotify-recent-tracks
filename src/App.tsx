@@ -29,7 +29,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={darkTheme}>
       <div className={classes.container}>
         <CssBaseline />
-        <Dialog onClose={close} open={open}>
+        <Dialog disableBackdropClick disableEscapeKeyDown onClose={close} open={open}>
           <DialogTitle>Connect to Spotify</DialogTitle>
           <DialogContent>
             Click <Link href={SPOTIFY_AUTH_URL}>here</Link> to connect.
