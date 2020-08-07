@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 
+import { AxiosPromise } from 'axios';
 import useAxios from 'axios-hooks';
 import qs from 'qs';
 
@@ -16,6 +17,7 @@ export const SPOTIFY_AUTH_URL =
 type useSpotifyConnectionType = () => {
   loading: boolean;
   accessToken: undefined | string;
+  refresh: () => AxiosPromise<any>;
   open: boolean;
   close: () => void;
 };
@@ -37,6 +39,15 @@ export const useSpotifyConnection: useSpotifyConnectionType = () => {
     },
     { manual: true },
   );
+
+  const refresh = () => {
+    const params = qs.stringify({
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    });
+
+    return getToken({ data: params });
+  };
 
   useEffect(() => {
     if (window.location.search.includes('code')) {
@@ -75,7 +86,7 @@ export const useSpotifyConnection: useSpotifyConnectionType = () => {
       setExpiresAt(expires);
       setOpen(false);
     }
-  }, [data, error, loading]);
+  }, [data, loading]);
 
   useEffect(() => {
     if (!expiresAt) {
@@ -83,18 +94,14 @@ export const useSpotifyConnection: useSpotifyConnectionType = () => {
     }
 
     if (parseInt(expiresAt) < Date.now()) {
-      const params = qs.stringify({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      });
-
-      getToken({ data: params });
+      // refresh();
     }
   }, [expiresAt]);
 
   return {
     loading,
     accessToken,
+    refresh,
     open,
     close: () => setOpen(false),
   };

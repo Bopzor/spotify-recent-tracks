@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from 'react';
 
-import useAxios from "axios-hooks";
+import { AxiosPromise } from 'axios';
+import useAxios from 'axios-hooks';
 
-import { Track } from "../types/Track/Track";
-import { formatDate } from "../utils/formatDate";
+import { Track } from '../types/Track/Track';
+import { formatDate } from '../utils/formatDate';
 
 export type RecentlyPlayedQueries = {
   before?: number;
@@ -15,13 +16,14 @@ type ParsedTracks = {
   [key: string]: Track[];
 };
 
-export const useGetRecentlyPlayed = (timeDirection: "before" | "after") => {
+export const useGetRecentlyPlayed = (timeDirection: 'before' | 'after', refreshToken: () => AxiosPromise<any>) => {
+  const [date, setDate] = useState(formatDate(new Date(Date.now())));
   const [tracks, setTracks] = useState<ParsedTracks | null>(null);
   const [{ data, loading, error }, get] = useAxios(
     {
       url: `${process.env.SPOTIFY_BASE_URL}/me/player/recently-played`,
     },
-    { manual: true }
+    { manual: true },
   );
 
   const parseRecentlyPlayed = useCallback((data: any) => {
@@ -44,13 +46,24 @@ export const useGetRecentlyPlayed = (timeDirection: "before" | "after") => {
         name: played.track.name,
         isPlayable: played.track.is_playable,
         artist: played.track.album.artists[0].name,
-        image:
-          played.track.album.images[played.track.album.images.length - 1].url,
+        image: played.track.album.images[played.track.album.images.length - 1].url,
       });
     }
 
     return parsed;
   }, []);
+
+  const getRecentlyPlayedTracks = () => {
+    const params: RecentlyPlayedQueries = { limit: 50 };
+
+    if (timeDirection === 'after') {
+      params.after = new Date(date).getTime();
+    } else {
+      params.before = new Date(date).getTime();
+    }
+
+    get({ params });
+  };
 
   useEffect(() => {
     setTracks(null);
@@ -58,8 +71,9 @@ export const useGetRecentlyPlayed = (timeDirection: "before" | "after") => {
 
   useEffect(() => {
     if (error) {
-      console.log(error.response.status);
-      return;
+      if (error?.response.status === 401) {
+        refreshToken().then(getRecentlyPlayedTracks);
+      }
     }
 
     if (data && !loading) {
@@ -67,11 +81,13 @@ export const useGetRecentlyPlayed = (timeDirection: "before" | "after") => {
         setTracks(parseRecentlyPlayed(data.items));
       }
     }
-  }, [data, loading, error, parseRecentlyPlayed]);
+  }, [data, loading, parseRecentlyPlayed]);
 
   return {
     loading,
     tracks,
-    getRecentlyPlayedTracks: (params: RecentlyPlayedQueries) => get({ params }),
+    date,
+    setDate,
+    getRecentlyPlayedTracks,
   };
 };

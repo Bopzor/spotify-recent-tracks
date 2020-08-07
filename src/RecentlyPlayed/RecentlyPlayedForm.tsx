@@ -15,14 +15,12 @@ import {
 import SettingsIcon from '@material-ui/icons/Settings';
 import clsx from 'clsx';
 
-import { formatDate } from '../utils/formatDate';
-
-import { RecentlyPlayedQueries } from './use-get-recently-played';
-
 type RecentlyPlayerProps = {
   timeDirection: 'after' | 'before';
   setTimeDirection: (timeDirection: 'after' | 'before') => void;
-  getRecentlyPlayed: (params: RecentlyPlayedQueries) => void;
+  date: string;
+  setDate: (date: string) => void;
+  getRecentlyPlayed: () => void;
 };
 
 const useStyles = makeStyles(({ palette }: Theme) => ({
@@ -42,24 +40,22 @@ const useStyles = makeStyles(({ palette }: Theme) => ({
   },
 }));
 
-const RecentlyPlayedForm: React.FC<RecentlyPlayerProps> = ({ timeDirection, setTimeDirection, getRecentlyPlayed }) => {
+const RecentlyPlayedForm: React.FC<RecentlyPlayerProps> = ({
+  timeDirection,
+  setTimeDirection,
+  date,
+  setDate,
+  getRecentlyPlayed,
+}) => {
   const classes = useStyles();
   const small = useMediaQuery((theme: Theme) => theme.breakpoints.up('sm'));
 
-  const [date, setDate] = useState(formatDate(new Date(Date.now())));
   const [openSettings, setOpenSettings] = useState(false);
 
   const handleClick = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    const params: RecentlyPlayedQueries = { limit: 50 };
 
-    if (timeDirection === 'after') {
-      params.after = new Date(date).getTime();
-    } else {
-      params.before = new Date(date).getTime();
-    }
-
-    return getRecentlyPlayed(params);
+    getRecentlyPlayed();
   };
 
   return (

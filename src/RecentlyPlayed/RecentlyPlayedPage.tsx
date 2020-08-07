@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 
 import { Accordion, AccordionDetails, AccordionSummary, Grid, makeStyles, Typography } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import { AxiosPromise } from 'axios';
 
 import Loader from '../Loader';
 import TrackDisplay from '../TrackDisplay';
@@ -16,7 +17,6 @@ const useStyles = makeStyles(({ spacing }) => ({
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
-    // margin: spacing(1, 0.5),
     padding: spacing(2),
   },
   list: {
@@ -25,18 +25,20 @@ const useStyles = makeStyles(({ spacing }) => ({
   },
 }));
 
-const RecentlyPlayedPage: React.FC = () => {
+const RecentlyPlayedPage: React.FC<{ refreshToken: () => AxiosPromise<any> }> = ({ refreshToken }) => {
   const classes = useStyles();
   const listRef = useRef<HTMLDivElement | undefined>();
 
   const [timeDirection, setTimeDirection] = useState<'before' | 'after'>('before');
-  const { tracks, getRecentlyPlayedTracks, loading } = useGetRecentlyPlayed(timeDirection);
+  const { tracks, date, setDate, getRecentlyPlayedTracks, loading } = useGetRecentlyPlayed(timeDirection, refreshToken);
 
   return (
     <div className={classes.container}>
       <RecentlyPlayedForm
         timeDirection={timeDirection}
         setTimeDirection={setTimeDirection}
+        date={date}
+        setDate={setDate}
         getRecentlyPlayed={getRecentlyPlayedTracks}
       />
 

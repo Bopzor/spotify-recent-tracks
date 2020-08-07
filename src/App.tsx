@@ -20,7 +20,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
 }));
 
 const App: React.FC = () => {
-  const { accessToken, open, close, loading } = useSpotifyConnection();
+  const { accessToken, refresh, open, close, loading } = useSpotifyConnection();
   useConfigureAxios(accessToken);
 
   const classes = useStyles();
@@ -36,7 +36,7 @@ const App: React.FC = () => {
           </DialogContent>
         </Dialog>
 
-        <RecentlyPlayedPage />
+        <RecentlyPlayedPage refreshToken={refresh} />
 
         <Loader loading={loading} />
       </div>
